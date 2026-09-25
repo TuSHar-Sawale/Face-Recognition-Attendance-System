@@ -1,0 +1,36 @@
+services:
+  # 1. Python Face Recognition Engine (FastAPI + dlib/OpenCV)
+  - type: web
+    name: face-recognition-python-engine
+    env: docker
+    dockerfilePath: ./python-engine/Dockerfile
+    dockerContext: ./python-engine
+    region: oregon
+    healthCheckPath: /health
+    autoDeploy: true
+
+  # 2. Node.js Web API Gateway & React Frontend
+  - type: web
+    name: face-attendance-web
+    env: docker
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    region: oregon
+    healthCheckPath: /api/health
+    autoDeploy: true
+    envVars:
+      - key: PORT
+        value: 5000
+      - key: NODE_ENV
+        value: production
+      - key: PYTHON_ENGINE_URL
+        fromService:
+          type: web
+          name: face-recognition-python-engine
+          property: host
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_ANON_KEY
+        sync: false
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false

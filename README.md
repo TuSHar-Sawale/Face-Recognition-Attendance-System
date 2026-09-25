@@ -231,6 +231,72 @@ The platform runs out of the box using local persistent storage. To connect your
 
 ---
 
+## ☁️ Production Deployment Guide
+
+The application is fully containerized and production-ready. You can deploy it using any of the following strategies:
+
+### ⚠️ Critical Browser Requirement: HTTPS
+Modern web browsers (Chrome, Edge, Safari, Firefox) **strictly enforce HTTPS** for webcam hardware access (`navigator.mediaDevices.getUserMedia`). Ensure your production deployment is served behind an SSL/TLS certificate (Render, Railway, Vercel, and Cloudflare provide free SSL automatically).
+
+---
+
+### Option A: 1-Click Cloud Deploy via Render (`render.yaml`)
+
+The repository includes a ready-to-use [`render.yaml`](render.yaml) blueprint:
+
+1. Push your code to your GitHub repository.
+2. Sign up / Log in to [Render.com](https://render.com).
+3. Click **New +** > **Blueprint**.
+4. Select your `Face-Recognition-Attendance-System` repository.
+5. Render will automatically detect `render.yaml` and provision:
+   - **`face-recognition-python-engine`**: Dockerized FastAPI service with OpenCV & dlib.
+   - **`face-attendance-web`**: Node.js Express server + pre-built React frontend.
+6. Under environment variables for `face-attendance-web`, paste your `SUPABASE_URL`, `SUPABASE_ANON_KEY`, and `SUPABASE_SERVICE_ROLE_KEY`.
+7. Click **Apply**. Both services will build and deploy with free automatic `https://` URLs!
+
+---
+
+### Option B: 1-Command Docker Compose (VPS / AWS / DigitalOcean)
+
+Ideal for any Linux virtual server (Ubuntu/Debian) on AWS EC2, DigitalOcean, Linode, or Oracle Cloud:
+
+```bash
+# 1. Clone your repository
+git clone https://github.com/TuSHar-Sawale/Face-Recognition-Attendance-System.git
+cd Face-Recognition-Attendance-System
+
+# 2. Configure environment variables (optional for Supabase)
+cp .env.example .env
+nano .env
+
+# 3. Build and launch all containers in detached mode
+docker compose up -d --build
+```
+
+- Web UI & REST API will be live on `http://YOUR_SERVER_IP:5000`
+- Python Face Engine will be live on `http://YOUR_SERVER_IP:5001`
+- Use Caddy, Nginx, or Traefik with Let's Encrypt for automatic HTTPS:
+  ```caddyfile
+  # Example Caddyfile for instant SSL:
+  yourdomain.com {
+      reverse_proxy localhost:5000
+  }
+  ```
+
+---
+
+### Option C: Hybrid Deploy (Frontend on Vercel + Backend on Render/Railway)
+
+1. **Deploy Python & Node to Render / Railway**:
+   - Deploy `python-engine` via Docker.
+   - Deploy `server` with `PYTHON_ENGINE_URL` set to the Python engine's URL.
+2. **Deploy Client to Vercel**:
+   - Import the `/client` directory into [Vercel](https://vercel.com).
+   - In [`client/vercel.json`](client/vercel.json), replace `https://your-node-backend-url.onrender.com` with your live Node.js URL.
+   - Deploy to get instant global CDN edge distribution.
+
+---
+
 ## 📡 REST API Reference
 
 | Method | Endpoint | Description |

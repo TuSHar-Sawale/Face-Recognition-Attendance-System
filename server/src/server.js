@@ -26,21 +26,34 @@ app.use(morgan('dev'));
 // Mount API routes
 app.use('/api', apiRoutes);
 
-// Root greeting
-app.get('/', (req, res) => {
-  res.json({
-    message: 'Face Recognition Attendance System API is running.',
-    version: '1.0.0',
-    endpoints: {
-      health: '/api/health',
-      members: '/api/members',
-      attendance_logs: '/api/attendance/logs',
-      attendance_stats: '/api/attendance/stats',
-      recognition_process: '/api/recognition/process-frame',
-      settings: '/api/settings'
-    }
+// Serve static frontend build if it exists (for single-container production deploys)
+const path = require('path');
+const fs = require('fs');
+const clientDist = path.join(__dirname, '../../client/dist');
+
+if (fs.existsSync(clientDist)) {
+  app.use(express.static(clientDist));
+  app.get('*', (req, res, next) => {
+    if (req.path.startsWith('/api')) return next();
+    res.sendFile(path.join(clientDist, 'index.html'));
   });
-});
+} else {
+  // Root greeting for API-only mode
+  app.get('/', (req, res) => {
+    res.json({
+      message: 'Face Recognition Attendance System API is running.',
+      version: '1.0.0',
+      endpoints: {
+        health: '/api/health',
+        members: '/api/members',
+        attendance_logs: '/api/attendance/logs',
+        attendance_stats: '/api/attendance/stats',
+        recognition_process: '/api/recognition/process-frame',
+        settings: '/api/settings'
+      }
+    });
+  });
+}
 
 // Error handling middleware
 app.use((err, req, res, next) => {
