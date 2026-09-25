@@ -1,0 +1,24 @@
+{
+  "name": "face-recognition-attendance-platform",
+  "version": "1.0.0",
+  "description": "Real-time facial detection and recognition attendance platform built with OpenCV and face recognition libraries. Integrated with Node.js/Express REST APIs and Supabase for PostgreSQL persistence, authentication, and cloud image storage.",
+  "scripts": {
+    "start:server": "cd server && npm start",
+    "start:client": "cd client && npm run dev",
+    "start:python": "cd python-engine && python server.py",
+    "start:kiosk-desktop": "cd python-engine && python live_kiosk.py",
+    "build:client": "cd client && npm run build"
+  },
+  "keywords": [
+    "opencv",
+    "face-recognition",
+    "attendance",
+    "supabase",
+    "postgresql",
+    "express",
+    "react",
+    "vite"
+  ],
+  "author": "Antigravity",
+  "license": "MIT"
+}
