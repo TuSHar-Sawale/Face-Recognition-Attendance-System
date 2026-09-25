@@ -1,6 +1,9 @@
-# Multi-stage Dockerfile for Node.js Backend + Built React Client
+# ==============================================================================
+# Multi-Stage All-in-One Container: React Client + Node.js API + Python OpenCV AI
+# Designed for Render.com Free Tier, Railway, Fly.io, and Docker Compose
+# ==============================================================================
 
-# Stage 1: Build Frontend Client
+# --- Stage 1: Build Frontend React Application ---
 FROM node:20-alpine AS client-builder
 WORKDIR /app/client
 COPY client/package*.json ./
@@ -8,23 +11,49 @@ RUN npm install
 COPY client/ ./
 RUN npm run build
 
-# Stage 2: Production Server Runner
-FROM node:20-alpine AS server
+# --- Stage 2: Production Multi-Service Runner ---
+FROM python:3.10-slim
+
 WORKDIR /app
 
-# Install server dependencies
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONUNBUFFERED=1
+ENV NODE_ENV=production
+ENV PORT=5000
+ENV PYTHON_ENGINE_URL=http://127.0.0.1:5001
+
+# Install system dependencies for OpenCV, dlib, Node.js and build tools
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
+    cmake \
+    libgl1 \
+    libglib2.0-0 \
+    curl \
+    && curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
+    && apt-get install -y --no-install-recommends nodejs \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install Python requirements
+COPY python-engine/requirements.txt ./python-engine/
+RUN pip install --no-cache-dir -r ./python-engine/requirements.txt
+
+# Install Node.js backend dependencies
 COPY server/package*.json ./server/
 WORKDIR /app/server
 RUN npm install --omit=dev
+WORKDIR /app
 
-# Copy server source
-COPY server/ ./
+# Copy application source code
+COPY python-engine ./python-engine
+COPY server ./server
 
-# Copy built frontend assets to client/dist for Express static serving
-COPY --from=client-builder /app/client/dist /app/client/dist
+# Copy built React frontend assets for static SPA serving
+COPY --from=client-builder /app/client/dist ./client/dist
 
-ENV PORT=5000
-ENV NODE_ENV=production
-EXPOSE 5000
+# Copy container entrypoint script
+COPY start.sh ./start.sh
+RUN chmod +x ./start.sh
 
-CMD ["node", "src/server.js"]
+EXPOSE 5000 10000
+
+CMD ["./start.sh"]

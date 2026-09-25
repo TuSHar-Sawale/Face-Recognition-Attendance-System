@@ -29,9 +29,17 @@ app.use('/api', apiRoutes);
 // Serve static frontend build if it exists (for single-container production deploys)
 const path = require('path');
 const fs = require('fs');
-const clientDist = path.join(__dirname, '../../client/dist');
 
-if (fs.existsSync(clientDist)) {
+const possibleDistPaths = [
+  path.join(__dirname, '../../client/dist'),
+  path.join(__dirname, '../client/dist'),
+  path.join(process.cwd(), 'client/dist'),
+  path.join(process.cwd(), '../client/dist')
+];
+const clientDist = possibleDistPaths.find(p => fs.existsSync(p));
+
+if (clientDist) {
+  console.log(`[STATIC] Serving compiled React frontend from: ${clientDist}`);
   app.use(express.static(clientDist));
   app.get('*', (req, res, next) => {
     if (req.path.startsWith('/api')) return next();
@@ -65,10 +73,10 @@ app.use((err, req, res, next) => {
 });
 
 // Start listening
-const server = app.listen(PORT, async () => {
+const server = app.listen(PORT, '0.0.0.0', async () => {
   console.log('='.repeat(65));
   console.log(`  FACE RECOGNITION ATTENDANCE SERVER RUNNING ON PORT ${PORT}`);
-  console.log(`  API Base: http://localhost:${PORT}/api`);
+  console.log(`  API Base: http://0.0.0.0:${PORT}/api`);
   console.log('='.repeat(65));
 
   // Check Supabase connection status
