@@ -22,10 +22,8 @@ ENV NODE_ENV=production
 ENV PORT=5000
 ENV PYTHON_ENGINE_URL=http://127.0.0.1:5001
 
-# Install system dependencies for OpenCV, dlib, Node.js and build tools
+# Install system dependencies for OpenCV, curl, and Node.js
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    build-essential \
-    cmake \
     libgl1 \
     libglib2.0-0 \
     curl \
@@ -33,9 +31,18 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && apt-get install -y --no-install-recommends nodejs \
     && rm -rf /var/lib/apt/lists/*
 
-# Install Python requirements
-COPY python-engine/requirements.txt ./python-engine/
-RUN pip install --no-cache-dir -r ./python-engine/requirements.txt
+# Install pre-compiled Python binaries (zero C++ compilation, uses <150MB build RAM)
+RUN pip install --no-cache-dir \
+    fastapi>=0.110.0 \
+    uvicorn>=0.28.0 \
+    dlib-bin \
+    face_recognition_models \
+    opencv-python-headless>=4.9.0 \
+    numpy>=1.26.0 \
+    python-multipart>=0.0.9 \
+    pillow>=10.2.0 \
+    requests>=2.31.0 \
+    && pip install --no-cache-dir --no-deps face-recognition>=1.3.0
 
 # Install Node.js backend dependencies
 COPY server/package*.json ./server/
