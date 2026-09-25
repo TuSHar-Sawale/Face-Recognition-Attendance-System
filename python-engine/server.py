@@ -236,6 +236,6 @@ def video_stream():
 
 if __name__ == "__main__":
     import uvicorn
-    port = int(os.environ.get("PORT", 5001))
+    port = int(os.environ.get("PYTHON_PORT", 5001))
     print(f"Starting OpenCV Face Recognition Server on http://0.0.0.0:{port} ...")
     uvicorn.run("server:app", host="0.0.0.0", port=port, reload=False)

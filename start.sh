@@ -2,21 +2,13 @@
 set -e
 
 echo "=========================================================="
-echo " Starting Python AI Face Recognition Engine on port 5001 "
+echo " [1/2] Launching Python Face Recognition Engine (Port 5001)... "
 echo "=========================================================="
 cd /app/python-engine
-PORT=5001 python server.py &
-PYTHON_PID=$!
+PYTHON_PORT=5001 python server.py &
 
 echo "=========================================================="
-echo " Starting Node.js API Gateway & React Web Server on port ${PORT:-5000} "
+echo " [2/2] Launching Node.js Server & React Web UI (Port ${PORT:-5000})... "
 echo "=========================================================="
 cd /app/server
-node src/server.js &
-NODE_PID=$!
-
-# Handle graceful shutdown
-trap "kill -TERM $PYTHON_PID $NODE_PID 2>/dev/null" INT TERM
-
-wait -n
-exit $?
+exec node src/server.js
